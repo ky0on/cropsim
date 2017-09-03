@@ -173,21 +173,20 @@ simriwCultivar <- function(name) {
 
 
 simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
-#     Constants and parameters which may not be cutivar specific
-#     Constants related to optcal properties of canopy
+    #Constants and parameters which may not be cutivar specific
+    #Constants related to optcal properties of canopy
     SCAT = 0.25
 	RSOL  = 0.1
 	RCAN  = 0.22
 	KREF = 0.5
-#     Parameters related changes with DVI in radiation conversion efficiency
+    #Parameters related changes with DVI in radiation conversion efficiency
     CL = 0.001
 	TAUC = 0.1
-#     Conversion factors from rough to brown rice, and panicle to rough rice
+    #Conversion factors from rough to brown rice, and panicle to rough rice
     CVBP = 0.76
 	CVPP = 0.9
 
-#     Initial conditions for simulation
-
+    #Initial conditions for simulation
 	if (transplant) {
 		DVII = 0.15  #transplant
 		LAII = 0.05
@@ -218,7 +217,7 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 	STHT=0
 	STLT=0
 
-# weather data
+    #weather data
     AVT <- wth@w$tavg
 	RAD <- wth@w$srad
 	TMX <- wth@w$tmax
@@ -228,7 +227,7 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 	DL <- daylength(wth@lat, wth@w$doy)
 
 	startindex <- which(wth@w[,'date'] == startday)
-	#endindex <- which(wth@w[,'date'] == endday)
+	# endindex <- which(wth@w[,'date'] == endday)
 
 	day <- startindex-1
 	growing <- TRUE
@@ -238,7 +237,7 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 	colnames(res) <- c('date','TMP', 'RAD','DL','DVI','LAI', 'DW', 'GY', 'PY')
 	class(res[,'date']) <- 'Date'
 
-	#     Dynamic Section of The Model  ************************************************************
+	#Dynamic Section of The Model  ************************************************************
 	while (growing) {
 		day <- day + 1
 		simday <- simday + 1
@@ -257,7 +256,7 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 		res[simday,'GY'] <- DWGRAIN
 		res[simday,'PY'] <- DWPAN
 
-#     Culculation of Developmental Index DVI
+        #Culculation of Developmental Index DVI
 		if (DVI < cultivar@DVIA) {
 			EFT <- AVT[day]-cultivar@TH
 			DVR <- 1.0/(cultivar@GV*(1.0+exp(-cultivar@ALF*EFT)))
@@ -270,9 +269,8 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 			DVR <- (1.0-exp(-cultivar@KCR*EFT))/cultivar@GR
 		}
 		DVI <- DVI+DVR
-#
-#    Culculation of LAI
-#
+
+        #Culculation of LAI
 		if (DVI < 0.95) {
 			EFFTL <- max(AVT[day]-cultivar@TCF,0.)
 			GRLAI <- LAI*cultivar@A*(1.0-exp(-cultivar@KF*EFFTL))*(1.0-(LAI/cultivar@FAS)**cultivar@ETA)
@@ -288,9 +286,8 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 			GRLAI <- -LAIMX*(1.0-cultivar@BETA)*DVR
 		}
 		LAI <- LAI+GRLAI
-#
-#    Culuculation of Crop Dry Weight
-#
+
+        #Culuculation of Crop Dry Weight
 		TAU <- exp(-(1.0-SCAT)*cultivar@EXTC*LAI)
 		REF <- RCAN-(RCAN-RSOL)*exp(-KREF*LAI)
 		ABSOP <- 1.0-REF-(1.0-RSOL)*TAU
@@ -302,9 +299,8 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 			CONEF <- COVCO2*(1.0+CL)/(1.0+CL*exp((DVI-1.0)/TAUC))
 		}
 		DW <- DW+CONEF*ABSRAD
-#
-#    Culuculation of Spikelet Sterility Percentage due to Cool Temerature
-#
+
+        #Culuculation of Spikelet Sterility Percentage due to Cool Temerature
 		if (DVI > 0.75  &  DVI < 1.2) {
 			CDEG <- max(cultivar@THOT-AVT[day],0.)
 			CDED <- CDED+CDEG
@@ -313,9 +309,8 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 			RIPEP <- 1.0-STLT/100.0
 			ATHLT <- cultivar@HIMX*RIPEP
 		}
-#
-#    Culculation of Spikelet Sterility Percentage due to Heat Stress
-#
+
+        #Culculation of Spikelet Sterility Percentage due to Heat Stress
 		if (DVI > 0.96  &  DVI < 1.20) {
 			HTSUM <- HTSUM+TMX[day]
 			HTDAY <- HTDAY+1
@@ -326,18 +321,16 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 			ATHHT <- (1.0-STHT/100.0)*cultivar@HIMX
 			IFLUG1 <- 1
 		}
-#
-#    Culculation of Grain Yield
-#
+
+        #Culculation of Grain Yield
 		ATHI <- min(ATHLT,ATHHT)
 		STERP <- max(STHT,STLT)
 		EFDVI <- max(DVI-1.22, 0.0)
 		HI <- ATHI*(1.0-exp(-5.57*EFDVI))
 		DWGRAIN <- DW*HI
 		DWPAN <- DWGRAIN/CVBP/CVPP
-#
-#    Time Control and Terminal Condition of Simulation
-#
+
+        #Time Control and Terminal Condition of Simulation
 		if (DVI > 1.0  &  AVT[day] < cultivar@CTR) {
 			TCHECK <- TCHECK+1
 		}
@@ -357,7 +350,7 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 	res[simday,'GY'] <- DWGRAIN
 	res[simday,'PY'] <- DWPAN
 
-#    Terminal Section of  Simulation
+    #Terminal Section of  Simulation
     PYBROD <- DWGRAIN/100.0
     PYBRON <- PYBROD/0.86
     PYPADY <- PYBRON/CVBP
