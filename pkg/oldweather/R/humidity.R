@@ -19,7 +19,7 @@ rhMinMax <- function(rhavg, tmin, tmax, tavg=(tmin+tmax)/2) {
 }	
 
 
-
+#Saturation vapor pressure (SVP)
 SVP <- function(temp) {
     .611 * 10^(7.5 * temp / (237.7 + temp))  #kpa
 #	6.112 * exp(17.67*temp/(243.5 + temp))
