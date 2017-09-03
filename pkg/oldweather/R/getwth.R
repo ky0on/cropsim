@@ -20,7 +20,7 @@ getWthXY <- function(lon, lat, start="1993-1-1", end="2009-12-31") {
 	cell <- cellFromXY(raster, c(lon, lat))
 	if (is.na(cell)) {
 		stop("invalid coordinates")
-	} 
+	}
 	filename <- paste("daily_weather_", cell, ".nasa", sep="")
 
 	vars <- c("swv_dwn", "T2M", "T2MN", "T2MX", "RH2M", "RAIN")
@@ -46,7 +46,7 @@ getWthXY <- function(lon, lat, start="1993-1-1", end="2009-12-31") {
 	h1 <- lns[7]
 #@ INSI   WTHLAT   WTHLONG  WELEV   TAV   AMP  REFHT  WNDHT
 #  NASA   59.500  -167.500      5                        10
-	
+
 	y <- as.numeric(substr(h1, 9, 15))
 	x <- as.numeric(substr(h1, 18, 25))
 	alt <- as.numeric(substr(h1, 27, 32))
@@ -61,7 +61,7 @@ getWthXY <- function(lon, lat, start="1993-1-1", end="2009-12-31") {
 	lns <- lns[,-1]
 	colnames(lns) <- c("year", "doy", "srad", "tmax", "tmin", "prec", "wind", "tdew", "tavg", "relh")
 
-	rhnx <- rhMinMax(lns[,'relh'], lns[,'tmin'], lns[,'tmax'], lns[,'tavg']) 
+	rhnx <- rhMinMax(lns[,'relh'], lns[,'tmin'], lns[,'tmax'], lns[,'tavg'])
 	vapr <- lns[,'relh'] * SVP(lns[,'tavg']) / 1000     # 100 for % and 10 to go from hPa to kPa
 	lns <- cbind(lns, rhnx, vapr)
 	date <- dateFromDoy(lns[,'doy'], lns[,'year'])
@@ -79,18 +79,18 @@ getWthXY <- function(lon, lat, start="1993-1-1", end="2009-12-31") {
 
 .getWthFileNASA <- function(filename) {
 	lns <- readLines(filename)
-	
+
 	if (substr(lns[6],1,1) == '@') {
 		return(.ICASAstyle(lns))
 	}
-	
+
 	alt <- NA
 	try(alt <- as.numeric(substr(lns[4],60,66)), silent=TRUE)
 	x <- 0
 	y <- 0
 	try(x <- as.numeric(substr(lns[3],36,41)), silent=TRUE)
 	try(y <- as.numeric(substr(lns[3],19,24)), silent=TRUE)
-	
+
 	hdr <- strsplit ( gsub("[[:space:]]+", " ", gsub("[[:space:]]+$", "", lns[14]))  , " ")[[1]]
 	if (hdr[1] != "YEAR") { stop("Something (not so) funny is going on") }
 	lns <- lns[15:length(lns)]
@@ -99,12 +99,12 @@ getWthXY <- function(lon, lat, start="1993-1-1", end="2009-12-31") {
 
 	nicevars <- c("year", "doy", "srad", "tavg", "tmin", "tmax", "relh", "prec")
 	colnames(lns) <- nicevars
-	rhnx <- rhMinMax(lns[,'relh'], lns[,'tmin'], lns[,'tmax'], lns[,'tavg']) 
-	
+	rhnx <- rhMinMax(lns[,'relh'], lns[,'tmin'], lns[,'tmax'], lns[,'tavg'])
+
 	vapr <- lns[,'relh'] * SVP(lns[,'tavg']) / 1000     # 100 for % and 10 to go from hPa to kPa
 
 	lns <- cbind(lns, rhnx, vapr)
-	
+
 	date <- dateFromDoy(lns[,'doy'], lns[,'year'])
 	lns <- cbind(as.data.frame(date), lns)
 	wth <- new('weather')
