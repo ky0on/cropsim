@@ -368,4 +368,3 @@ simriw <- function(wth, cultivar, startday, transplant=FALSE, CO2=350) {
 
 	return(r)
 }
-
